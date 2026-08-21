@@ -5,16 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
-void main() => runApp(const AuroraApp());
+void main() => runApp(const AuraApp());
 
-class AuroraApp extends StatelessWidget {
-  const AuroraApp({super.key, this.enableAudio = true});
+class AuraApp extends StatelessWidget {
+  const AuraApp({super.key, this.enableAudio = true});
 
   final bool enableAudio;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Aurora',
+    title: 'Aura',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
@@ -50,7 +50,11 @@ const _tracks = [
     artist: 'The Late Nights',
     album: 'Echoes',
     url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    colors: [Color(0xFFDE4E8B), Color(0xFF6E55E8), Color(0xFF122A54)],
+    colors: [
+      Color.fromARGB(255, 227, 224, 225),
+      Color.fromARGB(255, 7, 3, 23),
+      Color.fromARGB(255, 216, 219, 223),
+    ],
     durationLabel: '3:52',
   ),
   Track(
@@ -58,7 +62,11 @@ const _tracks = [
     artist: 'Mira Sol',
     album: 'City Lights',
     url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    colors: [Color(0xFFFF894F), Color(0xFFD23C88), Color(0xFF302063)],
+    colors: [
+      Color.fromARGB(255, 145, 134, 128),
+      Color(0xFFD23C88),
+      Color(0xFF302063),
+    ],
     durationLabel: '4:16',
   ),
   Track(
@@ -279,7 +287,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 onTap: () async {
                   await Clipboard.setData(
                     ClipboardData(
-                      text: '${_track.title} — ${_track.artist} on Aurora',
+                      text: '${_track.title} — ${_track.artist} on Aura',
                     ),
                   );
                   if (sheetContext.mounted) Navigator.pop(sheetContext);
@@ -378,7 +386,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               title: _selectedTab == 0
                   ? 'NOW PLAYING'
                   : ['HOME', 'DISCOVER', 'LIBRARY'][_selectedTab],
-              subtitle: _selectedTab == 0 ? _track.album : 'Aurora music',
+              subtitle: _selectedTab == 0 ? _track.album : 'Aura music',
               onClose: () {
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
