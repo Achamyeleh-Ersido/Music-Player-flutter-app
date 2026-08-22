@@ -7,7 +7,7 @@ void main() {
   testWidgets('music app navigates between its main sections', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const AuroraApp(enableAudio: false));
+    await tester.pumpWidget(const AuraApp(enableAudio: false));
 
     expect(find.text('Afterglow'), findsOneWidget);
 

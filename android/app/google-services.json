@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "949648824522",
+    "project_id": "muzic-zone",
+    "storage_bucket": "muzic-zone.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949648824522:android:87e7844613a98be062bc33",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhH34zu63v58pjahImtStJto_nFkCD4bo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

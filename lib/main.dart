@@ -1,11 +1,19 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_2/firebase_options.dart';
 import 'package:just_audio/just_audio.dart';
 
-void main() => runApp(const AuraApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const AuraApp());
+}
+
+//void main() => runApp(const AuraApp());
 
 class AuraApp extends StatelessWidget {
   const AuraApp({super.key, this.enableAudio = true});
@@ -386,7 +394,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               title: _selectedTab == 0
                   ? 'NOW PLAYING'
                   : ['HOME', 'DISCOVER', 'LIBRARY'][_selectedTab],
-              subtitle: _selectedTab == 0 ? _track.album : 'Aura music',
+              subtitle: _selectedTab == 0 ? _track.album : 'Aura music Zone',
               onClose: () {
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
