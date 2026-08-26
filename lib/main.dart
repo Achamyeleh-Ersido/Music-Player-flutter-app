@@ -393,7 +393,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             _Header(
               title: _selectedTab == 0
                   ? 'NOW PLAYING'
-                  : ['HOME', 'DISCOVER', 'LIBRARY'][_selectedTab],
+                  : ['HOME', 'DISCOVER', 'LIBRARY', 'PROFILE'][_selectedTab],
               subtitle: _selectedTab == 0 ? _track.album : 'Aura music Zone',
               onClose: () {
                 if (Navigator.canPop(context)) {
@@ -425,6 +425,8 @@ class _PlayerScreenState extends State<PlayerScreen>
           onPlay: _playTrack,
           onBrowse: () => setState(() => _selectedTab = 1),
         );
+      case 3:
+        return const _ProfileView();
       default:
         return _NowPlayingView(
           track: _track,
@@ -791,6 +793,25 @@ class _ProgressSection extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ProfileView extends StatelessWidget {
+  const _ProfileView({super.key});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: const [
+        Icon(Icons.account_circle_rounded, size: 100, color: Color(0xFFB4B8C9)),
+        SizedBox(height: 16),
+        Text(
+          'Profile',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Controls extends StatelessWidget {
@@ -1167,8 +1188,9 @@ class _BottomNavigation extends StatelessWidget {
       Icons.home_rounded,
       Icons.explore_rounded,
       Icons.library_music_rounded,
+      Icons.account_circle_rounded,
     ];
-    const labels = ['Home', 'Discover', 'Library'];
+    const labels = ['Home', 'Discover', 'Library', 'Profile'];
     return Container(
       margin: const EdgeInsets.fromLTRB(18, 8, 18, 13),
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -1178,7 +1200,7 @@ class _BottomNavigation extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(3, (index) {
+        children: List.generate(4, (index) {
           final selected = index == selectedIndex;
           return InkWell(
             onTap: () => onChanged(index),
@@ -1195,7 +1217,7 @@ class _BottomNavigation extends StatelessWidget {
                   Icon(
                     icons[index],
                     color: selected
-                        ? const Color(0xFFFFA4C5)
+                        ? const Color.fromARGB(255, 62, 56, 58)
                         : const Color(0xFFB4B8C9),
                   ),
                   if (selected) ...[
