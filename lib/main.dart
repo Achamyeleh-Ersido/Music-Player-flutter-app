@@ -2,14 +2,17 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_2/firebase_options.dart';
+import 'package:flutter_application_2/services/auth_service.dart';
 import 'package:just_audio/just_audio.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await AuthService().initializeGoogleSignIn();
   runApp(const AuraApp());
 }
 
@@ -30,7 +33,22 @@ class AuraApp extends StatelessWidget {
       fontFamily: 'sans-serif',
       scaffoldBackgroundColor: const Color(0xFF11141F),
     ),
-    home: PlayerScreen(enableAudio: enableAudio),
+    home: enableAudio ? const _AuthGate() : const PlayerScreen(enableAudio: false),
+  );
+}
+
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<User?>(
+    stream: AuthService().authStateChanges,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      return snapshot.hasData ? const PlayerScreen() : const _AuthenticationView();
+    },
   );
 }
 
@@ -796,21 +814,336 @@ class _ProgressSection extends StatelessWidget {
 }
 
 class _ProfileView extends StatelessWidget {
-  const _ProfileView({super.key});
+  const _ProfileView();
 
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Icon(Icons.account_circle_rounded, size: 100, color: Color(0xFFB4B8C9)),
-        SizedBox(height: 16),
-        Text(
-          'Profile',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+  Widget build(BuildContext context) => StreamBuilder<User?>(
+    stream: FirebaseAuth.instance.userChanges(),
+    builder: (context, snapshot) {
+      final user = snapshot.data ?? FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      return _AccountDetails(user: user);
+    },
+  );
+}
+
+class _AccountDetails extends StatefulWidget {
+  const _AccountDetails({required this.user});
+
+  final User user;
+
+  @override
+  State<_AccountDetails> createState() => _AccountDetailsState();
+}
+
+class _AccountDetailsState extends State<_AccountDetails> {
+  bool _isSigningOut = false;
+
+  String get _initials {
+    final source = widget.user.displayName?.trim().isNotEmpty == true
+        ? widget.user.displayName!.trim()
+        : (widget.user.email ?? 'A');
+    final pieces = source.split(RegExp(r'\s+'));
+    return pieces
+        .take(2)
+        .map((piece) => piece.isEmpty ? '' : piece[0].toUpperCase())
+        .join();
+  }
+
+  String _providerName(String id) => switch (id) {
+    'password' => 'Email and password',
+    'google.com' => 'Google',
+    'apple.com' => 'Apple',
+    'phone' => 'Phone number',
+    _ => id,
+  };
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Unavailable';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final local = date.toLocal();
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+
+  Future<void> _signOut() async {
+    setState(() => _isSigningOut = true);
+    try {
+      await AuthService().signOut();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not sign out. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSigningOut = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.user;
+    final providers = user.providerData
+        .map((provider) => _providerName(provider.providerId))
+        .toSet()
+        .toList();
+    final displayName = user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!.trim()
+        : 'Aura listener';
+    final info = [
+      _AccountInfo(
+        icon: Icons.person_outline_rounded,
+        label: 'Name',
+        value: displayName,
+      ),
+      _AccountInfo(
+        icon: Icons.mail_outline_rounded,
+        label: 'Email',
+        value: user.email ?? 'Not shared by your sign-in provider',
+      ),
+      _AccountInfo(
+        icon: Icons.phone_outlined,
+        label: 'Phone',
+        value: user.phoneNumber ?? 'Not added',
+      ),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFFFF7DAC), Color(0xFF9B86FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: ClipOval(
+                child: user.photoURL == null
+                    ? Center(
+                        child: Text(
+                          _initials,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF201D31),
+                          ),
+                        ),
+                      )
+                    : Image.network(
+                        user.photoURL!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Center(
+                          child: Text(
+                            _initials,
+                            style: const TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF201D31),
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email ?? 'Signed in to Aura',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Color(0xFFA8ADC0)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF29243C),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF423C60)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.verified_user_rounded, color: Color(0xFF9B86FF)),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Active session', style: TextStyle(fontWeight: FontWeight.w800)),
+                    SizedBox(height: 3),
+                    Text(
+                      'Your account is signed in on this device.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFFA8ADC0)),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                user.emailVerified ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                color: user.emailVerified ? const Color(0xFF6DDE9A) : const Color(0xFFFFC56F),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        const Text(
+          'Personal information',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF202435),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            children: [
+              for (var index = 0; index < info.length; index++) ...[
+                _ProfileInfoRow(info: info[index]),
+                if (index < info.length - 1)
+                  const Divider(height: 1, indent: 56, color: Color(0xFF363A50)),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Account & session',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF202435),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SessionDetail(
+                label: 'Sign-in method',
+                value: providers.isEmpty ? 'Unknown' : providers.join(' • '),
+              ),
+              const SizedBox(height: 14),
+              _SessionDetail(label: 'Member since', value: _formatDate(user.metadata.creationTime)),
+              const SizedBox(height: 14),
+              _SessionDetail(label: 'Last sign-in', value: _formatDate(user.metadata.lastSignInTime)),
+              const SizedBox(height: 14),
+              _SessionDetail(label: 'User ID', value: user.uid, selectable: true),
+            ],
+          ),
+        ),
+        const SizedBox(height: 26),
+        OutlinedButton.icon(
+          onPressed: _isSigningOut ? null : _signOut,
+          icon: _isSigningOut
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.logout_rounded),
+          label: Text(_isSigningOut ? 'Signing out...' : 'Sign out'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFFF9DBF),
+            side: const BorderSide(color: Color(0xFF9D4166)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountInfo {
+  const _AccountInfo({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+}
+
+class _ProfileInfoRow extends StatelessWidget {
+  const _ProfileInfoRow({required this.info});
+
+  final _AccountInfo info;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+    child: Row(
+      children: [
+        Icon(info.icon, color: const Color(0xFFB7A5FF)),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(info.label, style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0))),
+              const SizedBox(height: 2),
+              Text(info.value, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
         ),
       ],
     ),
+  );
+}
+
+class _SessionDetail extends StatelessWidget {
+  const _SessionDetail({required this.label, required this.value, this.selectable = false});
+
+  final String label;
+  final String value;
+  final bool selectable;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0))),
+      const SizedBox(height: 3),
+      selectable
+          ? SelectableText(value, style: const TextStyle(fontSize: 13))
+          : Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+    ],
   );
 }
 
@@ -913,7 +1246,152 @@ class _SmallControl extends StatelessWidget {
     ),
   );
 }
+class _AuthenticationView extends StatefulWidget {
+  const _AuthenticationView();
 
+  @override
+  State<_AuthenticationView> createState() => _AuthenticationViewState();
+}
+
+class _AuthenticationViewState extends State<_AuthenticationView> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _auth = AuthService();
+  bool _isSignUp = true;
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    try {
+      if (_isSignUp) {
+        await _auth.signUpWithEmail(_emailController.text.trim(), _passwordController.text, _nameController.text.trim());
+      } else {
+        await _auth.signInWithEmail(_emailController.text.trim(), _passwordController.text);
+      }
+    } on FirebaseAuthException catch (error) {
+      _showError(_authMessage(error.code));
+    } catch (_) {
+      _showError('Something went wrong. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _providerSignIn(Future<void> Function() action) async {
+    setState(() => _isLoading = true);
+    try {
+      await action();
+    } on FirebaseAuthException catch (error) {
+      _showError(_authMessage(error.code));
+    } catch (_) {
+      _showError('Sign-in was cancelled or could not be completed.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _authMessage(String code) => switch (code) {
+    'email-already-in-use' => 'That email is already registered.',
+    'invalid-credential' || 'wrong-password' || 'user-not-found' => 'Email or password is incorrect.',
+    'weak-password' => 'Use a password with at least 6 characters.',
+    'invalid-email' => 'Enter a valid email address.',
+    _ => 'Could not authenticate. Please try again.',
+  };
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  InputDecoration _decoration(String label, IconData icon) => InputDecoration(
+    labelText: label,
+    prefixIcon: Icon(icon),
+    filled: true,
+    fillColor: const Color(0xFF202435),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+  );
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(Icons.graphic_eq_rounded, size: 64, color: Color(0xFFFF7DAC)),
+                  const SizedBox(height: 18),
+                  Text(_isSignUp ? 'Find your frequency' : 'Welcome back', textAlign: TextAlign.center, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Text(_isSignUp ? 'Create your Aura account.' : 'Sign in to continue listening.', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFA8ADC0))),
+                  const SizedBox(height: 32),
+                  if (_isSignUp) ...[
+                    TextFormField(controller: _nameController, textInputAction: TextInputAction.next, decoration: _decoration('Display name', Icons.person_outline_rounded), validator: (value) => value == null || value.trim().isEmpty ? 'Enter your name' : null),
+                    const SizedBox(height: 14),
+                  ],
+                  TextFormField(controller: _emailController, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, decoration: _decoration('Email', Icons.mail_outline_rounded), validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: _decoration('Password', Icons.lock_outline_rounded).copyWith(suffixIcon: IconButton(onPressed: () => setState(() => _obscurePassword = !_obscurePassword), icon: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded))),
+                    validator: (value) => value == null || value.length < 6 ? 'Use at least 6 characters' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton(onPressed: _isLoading ? null : _submit, style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)), child: _isLoading ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_isSignUp ? 'Create account' : 'Sign in')),
+                  const SizedBox(height: 14),
+                  if (_auth.supportsGoogleSignIn) ...[
+                    OutlinedButton.icon(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _providerSignIn(_auth.signInWithGoogle),
+                      icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+                      label: const Text('Continue with Google'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  if (_auth.supportsAppleSignIn)
+                    OutlinedButton.icon(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _providerSignIn(_auth.signInWithApple),
+                      icon: const Icon(Icons.apple_rounded),
+                      label: const Text('Continue with Apple'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  TextButton(onPressed: _isLoading ? null : () => setState(() => _isSignUp = !_isSignUp), child: Text(_isSignUp ? 'Already have an account? Sign in' : 'New to Aura? Create an account')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
 class _QualityCard extends StatelessWidget {
   const _QualityCard({required this.onTap});
   final VoidCallback onTap;

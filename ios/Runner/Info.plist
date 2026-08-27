@@ -6,6 +6,17 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.949648824522-upalepd7j2i43mom4vrsat5i97vifpsi</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Flutter Application 2</string>
 	<key>CFBundleExecutable</key>
@@ -14,6 +25,8 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>GIDClientID</key>
+	<string>949648824522-upalepd7j2i43mom4vrsat5i97vifpsi.apps.googleusercontent.com</string>
 	<key>CFBundleName</key>
 	<string>flutter_application_2</string>
 	<key>CFBundlePackageType</key>
