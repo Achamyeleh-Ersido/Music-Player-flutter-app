@@ -13,7 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AuthService().initializeGoogleSignIn();
-  runApp(const AuraApp());
+  runApp(AuraApp());
 }
 
 //void main() => runApp(const AuraApp());
@@ -33,7 +33,9 @@ class AuraApp extends StatelessWidget {
       fontFamily: 'sans-serif',
       scaffoldBackgroundColor: const Color(0xFF11141F),
     ),
-    home: enableAudio ? const _AuthGate() : const PlayerScreen(enableAudio: false),
+    home: enableAudio
+        ? const _AuthGate()
+        : const PlayerScreen(enableAudio: false),
   );
 }
 
@@ -47,7 +49,9 @@ class _AuthGate extends StatelessWidget {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
-      return snapshot.hasData ? const PlayerScreen() : const _AuthenticationView();
+      return snapshot.hasData
+          ? const PlayerScreen()
+          : const _AuthenticationView();
     },
   );
 }
@@ -887,7 +891,9 @@ class _AccountDetailsState extends State<_AccountDetails> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not sign out. Please try again.')),
+          const SnackBar(
+            content: Text('Could not sign out. Please try again.'),
+          ),
         );
       }
     } finally {
@@ -976,7 +982,10 @@ class _AccountDetailsState extends State<_AccountDetails> {
                     displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -1006,7 +1015,10 @@ class _AccountDetailsState extends State<_AccountDetails> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Active session', style: TextStyle(fontWeight: FontWeight.w800)),
+                    Text(
+                      'Active session',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     SizedBox(height: 3),
                     Text(
                       'Your account is signed in on this device.',
@@ -1016,8 +1028,12 @@ class _AccountDetailsState extends State<_AccountDetails> {
                 ),
               ),
               Icon(
-                user.emailVerified ? Icons.check_circle_rounded : Icons.info_outline_rounded,
-                color: user.emailVerified ? const Color(0xFF6DDE9A) : const Color(0xFFFFC56F),
+                user.emailVerified
+                    ? Icons.check_circle_rounded
+                    : Icons.info_outline_rounded,
+                color: user.emailVerified
+                    ? const Color(0xFF6DDE9A)
+                    : const Color(0xFFFFC56F),
               ),
             ],
           ),
@@ -1038,7 +1054,11 @@ class _AccountDetailsState extends State<_AccountDetails> {
               for (var index = 0; index < info.length; index++) ...[
                 _ProfileInfoRow(info: info[index]),
                 if (index < info.length - 1)
-                  const Divider(height: 1, indent: 56, color: Color(0xFF363A50)),
+                  const Divider(
+                    height: 1,
+                    indent: 56,
+                    color: Color(0xFF363A50),
+                  ),
               ],
             ],
           ),
@@ -1063,11 +1083,21 @@ class _AccountDetailsState extends State<_AccountDetails> {
                 value: providers.isEmpty ? 'Unknown' : providers.join(' • '),
               ),
               const SizedBox(height: 14),
-              _SessionDetail(label: 'Member since', value: _formatDate(user.metadata.creationTime)),
+              _SessionDetail(
+                label: 'Member since',
+                value: _formatDate(user.metadata.creationTime),
+              ),
               const SizedBox(height: 14),
-              _SessionDetail(label: 'Last sign-in', value: _formatDate(user.metadata.lastSignInTime)),
+              _SessionDetail(
+                label: 'Last sign-in',
+                value: _formatDate(user.metadata.lastSignInTime),
+              ),
               const SizedBox(height: 14),
-              _SessionDetail(label: 'User ID', value: user.uid, selectable: true),
+              _SessionDetail(
+                label: 'User ID',
+                value: user.uid,
+                selectable: true,
+              ),
             ],
           ),
         ),
@@ -1093,7 +1123,11 @@ class _AccountDetailsState extends State<_AccountDetails> {
 }
 
 class _AccountInfo {
-  const _AccountInfo({required this.icon, required this.label, required this.value});
+  const _AccountInfo({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -1116,7 +1150,10 @@ class _ProfileInfoRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(info.label, style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0))),
+              Text(
+                info.label,
+                style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0)),
+              ),
               const SizedBox(height: 2),
               Text(info.value, maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
@@ -1128,7 +1165,11 @@ class _ProfileInfoRow extends StatelessWidget {
 }
 
 class _SessionDetail extends StatelessWidget {
-  const _SessionDetail({required this.label, required this.value, this.selectable = false});
+  const _SessionDetail({
+    required this.label,
+    required this.value,
+    this.selectable = false,
+  });
 
   final String label;
   final String value;
@@ -1138,11 +1179,17 @@ class _SessionDetail extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0))),
+      Text(
+        label,
+        style: const TextStyle(fontSize: 12, color: Color(0xFFA8ADC0)),
+      ),
       const SizedBox(height: 3),
       selectable
           ? SelectableText(value, style: const TextStyle(fontSize: 13))
-          : Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          : Text(
+              value,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
     ],
   );
 }
@@ -1246,6 +1293,7 @@ class _SmallControl extends StatelessWidget {
     ),
   );
 }
+
 class _AuthenticationView extends StatefulWidget {
   const _AuthenticationView();
 
@@ -1276,9 +1324,16 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
     setState(() => _isLoading = true);
     try {
       if (_isSignUp) {
-        await _auth.signUpWithEmail(_emailController.text.trim(), _passwordController.text, _nameController.text.trim());
+        await _auth.signUpWithEmail(
+          _emailController.text.trim(),
+          _passwordController.text,
+          _nameController.text.trim(),
+        );
       } else {
-        await _auth.signInWithEmail(_emailController.text.trim(), _passwordController.text);
+        await _auth.signInWithEmail(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
       }
     } on FirebaseAuthException catch (error) {
       _showError(_authMessage(error.code));
@@ -1304,7 +1359,9 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
 
   String _authMessage(String code) => switch (code) {
     'email-already-in-use' => 'That email is already registered.',
-    'invalid-credential' || 'wrong-password' || 'user-not-found' => 'Email or password is incorrect.',
+    'invalid-credential' ||
+    'wrong-password' ||
+    'user-not-found' => 'Email or password is incorrect.',
     'weak-password' => 'Use a password with at least 6 characters.',
     'invalid-email' => 'Enter a valid email address.',
     _ => 'Could not authenticate. Please try again.',
@@ -1312,7 +1369,9 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   InputDecoration _decoration(String label, IconData icon) => InputDecoration(
@@ -1320,7 +1379,10 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
     prefixIcon: Icon(icon),
     filled: true,
     fillColor: const Color(0xFF202435),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    ),
   );
 
   @override
@@ -1336,26 +1398,93 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.graphic_eq_rounded, size: 64, color: Color(0xFFFF7DAC)),
+                  const Icon(
+                    Icons.graphic_eq_rounded,
+                    size: 64,
+                    color: Color(0xFFFF7DAC),
+                  ),
                   const SizedBox(height: 18),
-                  Text(_isSignUp ? 'Find your frequency' : 'Welcome back', textAlign: TextAlign.center, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+                  Text(
+                    _isSignUp ? 'Find your frequency' : 'Welcome back',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(_isSignUp ? 'Create your Aura account.' : 'Sign in to continue listening.', textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFA8ADC0))),
+                  Text(
+                    _isSignUp
+                        ? 'Create your Aura account.'
+                        : 'Sign in to continue listening.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFFA8ADC0)),
+                  ),
                   const SizedBox(height: 32),
                   if (_isSignUp) ...[
-                    TextFormField(controller: _nameController, textInputAction: TextInputAction.next, decoration: _decoration('Display name', Icons.person_outline_rounded), validator: (value) => value == null || value.trim().isEmpty ? 'Enter your name' : null),
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: _decoration(
+                        'Full Name',
+                        Icons.person_outline_rounded,
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Enter your name'
+                          : null,
+                    ),
                     const SizedBox(height: 14),
                   ],
-                  TextFormField(controller: _emailController, keyboardType: TextInputType.emailAddress, textInputAction: TextInputAction.next, decoration: _decoration('Email', Icons.mail_outline_rounded), validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: _decoration(
+                      'Email',
+                      Icons.mail_outline_rounded,
+                    ),
+                    validator: (value) => value == null || !value.contains('@')
+                        ? 'Enter a valid email'
+                        : null,
+                  ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    decoration: _decoration('Password', Icons.lock_outline_rounded).copyWith(suffixIcon: IconButton(onPressed: () => setState(() => _obscurePassword = !_obscurePassword), icon: Icon(_obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded))),
-                    validator: (value) => value == null || value.length < 6 ? 'Use at least 6 characters' : null,
+                    decoration:
+                        _decoration(
+                          'Password',
+                          Icons.lock_outline_rounded,
+                        ).copyWith(
+                          suffixIcon: IconButton(
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_rounded
+                                  : Icons.visibility_off_rounded,
+                            ),
+                          ),
+                        ),
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Use at least 6 characters'
+                        : null,
                   ),
                   const SizedBox(height: 20),
-                  FilledButton(onPressed: _isLoading ? null : _submit, style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)), child: _isLoading ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_isSignUp ? 'Create account' : 'Sign in')),
+                  FilledButton(
+                    onPressed: _isLoading ? null : _submit,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_isSignUp ? 'Create account' : 'Sign in'),
+                  ),
                   const SizedBox(height: 14),
                   if (_auth.supportsGoogleSignIn) ...[
                     OutlinedButton.icon(
@@ -1382,7 +1511,16 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
                       ),
                     ),
                   const SizedBox(height: 20),
-                  TextButton(onPressed: _isLoading ? null : () => setState(() => _isSignUp = !_isSignUp), child: Text(_isSignUp ? 'Already have an account? Sign in' : 'New to Aura? Create an account')),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => setState(() => _isSignUp = !_isSignUp),
+                    child: Text(
+                      _isSignUp
+                          ? 'Already have an account? Sign in'
+                          : 'New to Aura? Create an account',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1392,6 +1530,7 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
     ),
   );
 }
+
 class _QualityCard extends StatelessWidget {
   const _QualityCard({required this.onTap});
   final VoidCallback onTap;
