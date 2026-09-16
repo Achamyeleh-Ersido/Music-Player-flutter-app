@@ -13,6 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await AuthService().initializeGoogleSignIn();
+
   runApp(AuraApp());
 }
 
@@ -1337,6 +1338,8 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
       }
     } on FirebaseAuthException catch (error) {
       _showError(_authMessage(error.code));
+    } on FirebaseException catch (error) {
+      _showError('Account created, but profile could not be saved: ${error.code}.');
     } catch (_) {
       _showError('Something went wrong. Please try again.');
     } finally {

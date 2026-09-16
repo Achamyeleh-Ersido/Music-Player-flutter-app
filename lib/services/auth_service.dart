@@ -139,11 +139,7 @@ class AuthService {
 
   // ---------- Profile (Firestore) ----------
   Future<void> _saveUserProfile(User user, {String? displayName}) async {
-    try {
-      await _createUserProfile(user, displayName: displayName);
-    } on FirebaseException {
-      // Authentication remains available if a Firestore rule is not yet set up.
-    }
+    await _createUserProfile(user, displayName: displayName);
   }
 
   Future<void> _createUserProfile(User user, {String? displayName}) async {
