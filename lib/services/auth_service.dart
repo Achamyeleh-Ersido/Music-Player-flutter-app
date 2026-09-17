@@ -24,9 +24,8 @@ class AuthService {
       defaultTargetPlatform == TargetPlatform.iOS ||
       defaultTargetPlatform == TargetPlatform.macOS;
 
-  Future<void> initializeGoogleSignIn() => supportsGoogleSignIn
-      ? _googleSignIn.initialize()
-      : Future<void>.value();
+  Future<void> initializeGoogleSignIn() =>
+      supportsGoogleSignIn ? _googleSignIn.initialize() : Future<void>.value();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
