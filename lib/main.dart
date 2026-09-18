@@ -1339,7 +1339,9 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
     } on FirebaseAuthException catch (error) {
       _showError(_authMessage(error.code));
     } on FirebaseException catch (error) {
-      _showError('Account created, but profile could not be saved: ${error.code}.');
+      _showError(
+        'Account created, but profile could not be saved: ${error.code}.',
+      );
     } catch (_) {
       _showError('Something went wrong. Please try again.');
     } finally {
@@ -1521,7 +1523,7 @@ class _AuthenticationViewState extends State<_AuthenticationView> {
                     child: Text(
                       _isSignUp
                           ? 'Already have an account? Sign in'
-                          : 'New to Aura? Create an account',
+                          : 'if you are new, Create an account',
                     ),
                   ),
                 ],
